@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📊 Free GMGN Bulk Balance Checker</title>
+  <style>
+    :root {
+      --bg: #0a0b14;
+      --card: #16172a;
+      --accent: #6366f1;
+      --text: #e0e0ff;
+      --green: #34d399;
+      --gray: #9ca3af;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    header { text-align: center; padding: 40px 0 20px; }
+    h1 { font-size: 1.8rem; margin-bottom: 10px; color: var(--accent); }
+    textarea {
+      width: 100%; height: 100px; background: var(--card); color: var(--text);
+      border: 1px solid #444; border-radius: 10px; padding: 16px; margin: 20px 0;
+      font-family: monospace;
+    }
+    button {
+      background: var(--accent); color: white; border: none; padding: 14px 32px;
+      border-radius: 10px; cursor: pointer; font-weight: 600;
+    }
+    .status { text-align: center; margin: 20px 0; color: var(--gray); }
+    .results { margin-top: 30px; }
+    .wallet-card {
+      background: var(--card); padding: 20px; border-radius: 12px;
+      margin-bottom: 16px; border-left: 4px solid var(--accent);
+    }
+    .address { font-family: monospace; font-size: 0.9rem; color: #aaa; margin-bottom: 10px; }
+    .value { font-weight: 700; font-size: 1.1rem; color: var(--green); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 Free GMGN Bulk Balance Checker</h1>
+      <p>No API keys • No paywalls • 100% Free Forever</p>
+    </header>
+
+    <textarea id="addressInput" placeholder="Paste Solana wallet addresses, one per line"></textarea>
+    <button id="checkBtn">🔍 Check Balances</button>
+    <p class="status" id="status">Enter addresses and click "Check Balances"</p>
+
+    <div class="results" id="results"></div>
+  </div>
+
+  <script>
+    const addressInput = document.getElementById('addressInput');
+    const checkBtn = document.getElementById('checkBtn');
+    const statusEl = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+
+    // URL to your GitHub-hosted balances.json (we'll generate this via Actions)
+    const DATA_URL = "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/gmgn-bulk-checker/main/data/balances.json";
+
+    checkBtn.addEventListener('click', async () => {
+      const input = addressInput.value.trim();
+      if (!input) return alert("Enter at least one address");
+
+      const addresses = input.split('\n').map(a => a.trim()).filter(a => a);
+
+      statusEl.innerText = "⏳ Processing... (free tier may take 30-60s)";
+
+      try {
+        // Trigger GitHub Action via webhook (optional later)
+        // For now, we assume balances.json is pre-generated for common tokens
+
+        const response = await fetch(DATA_URL + "?t=" + Date.now());
+        const allData = await response.json();
+
+        let foundCount = 0;
+        resultsEl.innerHTML = '';
+
+        addresses.forEach(addr => {
+          const data = allData[addr] || null;
+          const card = document.createElement('div');
+          card.className = 'wallet-card';
+
+          if (data) {
+            foundCount++;
+            card.innerHTML = `
+              <div class="address">${addr.slice(0,6)}...${addr.slice(-4)}</div>
+              <div>Balance: ${data.balance} SOL</div>
+              <div class="value">$${parseFloat(data.value_usd).toFixed(2)}</div>
+            `;
+          } else {
+            card.innerHTML = `
+              <div class="address">${addr.slice(0,6)}...${addr.slice(-4)}</div>
+              <div>Not found or not scraped yet</div>
+            `;
+          }
+
+          resultsEl.appendChild(card);
+        });
+
+        statusEl.innerText = `✅ Done! Found ${foundCount} of ${addresses.length} wallets.`;
+
+      } catch (err) {
+        statusEl.innerText = `❌ Error: ${err.message}`;
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
