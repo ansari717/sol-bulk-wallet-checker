@@ -58,3 +58,31 @@ Click "Fork" → create your own copy.
 ---
 
 ## 📂 Project Structure
+gmgn-bulk-checker/
+├── index.html → Frontend UI (GitHub Pages)
+├── data/
+│ └── balances.json → Auto-updated by GitHub Actions
+├── .github/workflows/
+│ └── scrape.yml → Scrapes GMGN every hour
+└── README.md → You are here!
+
+
+📜 Disclaimer
+⚠️ FOR EDUCATIONAL PURPOSES ONLY
+This tool uses publicly accessible endpoints from GMGN.ai.
+Not affiliated with GMGN.ai. Not financial advice. Use at your own risk.
+
+🤝 Contributing
+Found a bug? Want to add features?
+
+Fork the repo
+Create your feature branch (git checkout -b feature/AmazingFeature)
+Commit your changes (git commit -m 'Add some AmazingFeature')
+Push to the branch (git push origin feature/AmazingFeature)
+Open a Pull Request
+
+
+🎁 Buy Me a Coffee? ☕
+If this saved you time or money — I’d love a coffee 😊
+But seriously — this is 100% free, no donations needed. Just go build something awesome.
+Solana: HchXARDQ6xMgAG9DwXMtcMzoDEMJV2Jy3AP8bcZ1QgmB
