@@ -1,0 +1,67 @@
+name: Scrape GMGN Balances
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  workflow_dispatch:     # Allow manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm init -y
+          npm install node-fetch
+
+      - name: Scrape balances
+        run: |
+          node <<EOF
+          const fs = require('fs');
+          const fetch = require('node-fetch');
+
+          const TOKEN_ADDRESS = "So11111111111111111111111111111111111111111";
+          const SAMPLE_WALLETS = [
+            "9My8w58eVVaPWyL5ny913pWRYuBzwRNtiKKcFqJBVaR7",
+            "9Tpr4kJqLPxo5jASuRcgPjRYuwRSKQxVChZPaZ7zFh7g",
+            "GjgFUkro8Ft6e4d2dBqjtCS8JQheuw1svoidS61t8fG3",
+            "PEQyKqpfxAAvcLhGpPoT2cYa88JpfznNur5BvRGrqAZ"
+          ];
+
+          const url = \`https://gmgn.ai/td/api/v1/wallets/balances?chain=sol&token_address=\${TOKEN_ADDRESS}\${SAMPLE_WALLETS.map(addr => \`&wallet_addresses=\${encodeURIComponent(addr)}\`).join('')}\`;
+
+          fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+              'Referer': 'https://gmgn.ai/'
+            }
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.code === 0) {
+              fs.writeFileSync('./data/balances.json', JSON.stringify(data.data, null, 2));
+              console.log("✅ Updated balances.json");
+            } else {
+              throw new Error("API error: " + data.msg);
+            }
+          })
+          .catch(err => {
+            console.error("❌ Scraping failed:", err);
+            process.exit(1);
+          });
+          EOF
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/balances.json
+          git commit -m "Auto-update balances [skip ci]" || echo "No changes to commit"
+          git push origin main
